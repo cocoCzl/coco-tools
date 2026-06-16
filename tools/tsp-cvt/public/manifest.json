@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Timestamp Converter",
+  "name": "TSP CVT",
   "version": "1.0.0",
-  "description": "优雅的时间戳转换工具，支持10位/13位时间戳与日期互转",
+  "description": "Coco Tools 的时间戳转换工具，支持10位/13位时间戳与日期互转",
   "action": {
     "default_popup": "index.html",
     "default_icon": {

@@ -257,7 +257,7 @@ function App() {
 
         <footer className="pt-2 text-center">
           <p className="text-xs text-gray-500">
-            tspCVT · 时间戳转换器
+            TSP CVT · Coco Tools
           </p>
         </footer>
       </main>

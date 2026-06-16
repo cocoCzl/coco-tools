@@ -1,8 +1,10 @@
 # Dependencies
 node_modules/
+tools/*/node_modules/
 
 # Build output
 dist/
+tools/*/dist/
 
 # TypeScript build info
 *.tsbuildinfo
@@ -10,6 +12,8 @@ dist/
 # Generated files
 vite.config.d.ts
 vite.config.js
+tools/*/vite.config.d.ts
+tools/*/vite.config.js
 
 # Logs
 logs
@@ -35,5 +39,5 @@ Thumbs.db
 # Test screenshots (keep README screenshot)
 *.jpg
 *.png
-!timestamp-converter-ui.jpg
-!public/icons/*.png
+!tools/tsp-cvt/timestamp-converter-ui.jpg
+!tools/tsp-cvt/public/icons/*.png
