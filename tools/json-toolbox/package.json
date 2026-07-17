@@ -1,0 +1,20 @@
+{
+  "name": "@coco-tools/json-toolbox",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "npm run generate-icons && tsc -p tsconfig.json && vite build && node scripts/check-release.mjs",
+    "preview": "vite preview --host 127.0.0.1",
+    "test": "node --test tests/*.test.ts",
+    "check": "npm test && npm run build",
+    "benchmark": "node scripts/benchmark.mjs",
+    "generate-icons": "node scripts/generate-icons.mjs"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "typescript": "~5.9.3",
+    "vite": "^7.3.1"
+  }
+}

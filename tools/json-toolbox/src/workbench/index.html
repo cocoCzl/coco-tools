@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <title>JSON 工具箱</title>
+    <script type="module" src="./main.ts"></script>
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#formatter" aria-label="JSON 工具箱首页">
+          <span class="brand-mark" aria-hidden="true"><i>{</i><i>}</i></span>
+          <span class="brand-copy">
+            <strong>JSON 工具箱</strong>
+            <small>JSON TOOLBOX · LOCAL WORKBENCH</small>
+          </span>
+        </a>
+        <div class="topbar-meta">
+          <span class="privacy-chip"><span></span>本地 · 离线</span>
+          <label class="theme-control">
+            <span class="sr-only">主题</span>
+            <select id="theme-select" aria-label="选择主题">
+              <option value="system">跟随系统</option>
+              <option value="light">浅色</option>
+              <option value="dark">深色</option>
+            </select>
+          </label>
+        </div>
+      </header>
+
+      <main class="workspace">
+        <section class="workspace-intro" aria-labelledby="page-title">
+          <div>
+            <p class="eyebrow">DEVELOPER UTILITY / 01</p>
+            <h1 id="page-title">让 JSON 留在你的<span class="headline-keep">浏览器里</span></h1>
+          </div>
+          <p>格式化、转换、生成 Java 数据类。无需上传，不留历史。</p>
+        </section>
+
+        <nav class="tool-tabs" aria-label="JSON 工具" role="tablist">
+          <button class="tool-tab is-active" role="tab" aria-selected="true" aria-controls="panel-formatter" id="tab-formatter" data-tool="formatter">
+            <span>01</span><b>格式化</b><small>FORMAT</small>
+          </button>
+          <button class="tool-tab" role="tab" aria-selected="false" aria-controls="panel-escape" id="tab-escape" data-tool="escape" tabindex="-1">
+            <span>02</span><b>转义</b><small>ESCAPE</small>
+          </button>
+          <button class="tool-tab" role="tab" aria-selected="false" aria-controls="panel-url" id="tab-url" data-tool="url" tabindex="-1">
+            <span>03</span><b>URL 参数</b><small>QUERY</small>
+          </button>
+          <button class="tool-tab" role="tab" aria-selected="false" aria-controls="panel-java" id="tab-java" data-tool="java" tabindex="-1">
+            <span>04</span><b>Java 数据类</b><small>CLASS</small>
+          </button>
+        </nav>
+
+        <section id="tool-panels" class="tool-panels"></section>
+      </main>
+
+      <footer class="footer">
+        <span>JSON TOOLBOX V1.0</span>
+        <span>无网络请求 · 无内容读取 · 无输入历史</span>
+      </footer>
+    </div>
+
+    <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
+  </body>
+</html>
