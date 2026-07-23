@@ -48,10 +48,10 @@ let taskSequence = 0
 let runningTask: RunningTask | undefined
 
 panelsHost.innerHTML = [
-  panelTemplate('formatter', '格式化与压缩', '严格校验 JSON，只改变空白，不改写数字或转义。', formatterControls()),
-  panelTemplate('escape', '转义与反转义', '生成完整 JSON 字符串字面量，或恢复其中的原始文本。', escapeControls()),
-  panelTemplate('url', 'URL 查询参数', '在标准查询字符串和扁平 JSON 对象之间转换。', urlControls()),
-  panelTemplate('java', 'Java 数据类', '从 JSON 样例推断 Java 8+ 单文件数据类。', javaControls()),
+  panelTemplate('formatter', '格式化与压缩', '严格校验 JSON，只调整空白格式，不改写数字或转义内容。', formatterControls()),
+  panelTemplate('escape', '转义与反转义', '将文本转为完整 JSON 字符串，或还原其中的原始内容。', escapeControls()),
+  panelTemplate('url', 'URL 参数转换', '在 URL 查询参数和扁平 JSON 对象之间转换。', urlControls()),
+  panelTemplate('java', '生成 Java 数据类', '根据 JSON 样例推断 Java 8+ 单文件数据类。', javaControls()),
 ].join('')
 
 const panels = new Map<ToolName, PanelElements>(
@@ -71,7 +71,7 @@ function panelTemplate(tool: ToolName, title: string, description: string, contr
   return `
     <article class="tool-panel" id="panel-${tool}" data-panel="${tool}" role="tabpanel" aria-labelledby="tab-${tool}" ${tool === 'formatter' ? '' : 'hidden'}>
       <header class="panel-heading">
-        <div><p class="panel-code">MODULE / ${tool.toUpperCase()}</p><h2>${title}</h2></div>
+        <div><h2>${title}</h2></div>
         <p>${description}</p>
       </header>
       ${controls}
