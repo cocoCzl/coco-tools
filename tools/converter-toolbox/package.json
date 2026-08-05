@@ -1,0 +1,20 @@
+{
+  "name": "@coco-tools/converter-toolbox",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "build": "node scripts/generate-icons.mjs && tsc -p tsconfig.json && vite build && node scripts/check-release.mjs && node scripts/package-release.mjs",
+    "test": "node --experimental-strip-types --test tests/*.test.*",
+    "test:browser": "npm run build && playwright test",
+    "check": "npm run test && npm run build && npm run benchmark",
+    "benchmark": "node --experimental-strip-types scripts/benchmark.mts"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.2",
+    "@types/node": "^24.10.1",
+    "typescript": "~5.9.3",
+    "vite": "^7.3.1"
+  }
+}

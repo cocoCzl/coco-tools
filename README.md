@@ -6,8 +6,7 @@
 
 | Tool | Description | Path |
 | --- | --- | --- |
-| TSP CVT | Chrome 时间戳转换扩展，支持 10 位/13 位时间戳与日期互转 | `tools/tsp-cvt` |
-| JSON 工具箱 | 本地、离线的 Chrome JSON 格式化、转换与 Java 数据类生成工具 | `tools/json-toolbox` |
+| 转换工具箱 | 本地、离线、轻量的 Chrome 数据与时间转换扩展 | `tools/converter-toolbox` |
 
 ## Development
 
@@ -17,49 +16,41 @@
 npm install
 ```
 
-开发 TSP CVT：
+开发转换工具箱：
 
 ```bash
-npm run dev:tsp-cvt
+npm run dev:converter-toolbox
 ```
 
-构建 TSP CVT：
+构建转换工具箱：
 
 ```bash
-npm run build:tsp-cvt
+npm run build:converter-toolbox
 ```
 
 Chrome 加载扩展时选择：
 
 ```text
-tools/tsp-cvt/dist
+tools/converter-toolbox/dist
 ```
 
-开发 JSON 工具箱：
+生成 GitHub Release 安装包并运行完整检查：
 
 ```bash
-npm run dev:json-toolbox
+npm run check:converter-toolbox
+npm run test:browser -w @coco-tools/converter-toolbox
 ```
 
-测试并构建 JSON 工具箱：
+安装包输出为 `tools/converter-toolbox/release/converter-toolbox-v1.0.0.zip`。解压后在 `chrome://extensions` 打开开发者模式，选择“加载已解压的扩展程序”并指向解压目录。升级时在扩展管理页刷新或重新加载新目录；卸载时在同页移除扩展即可，转换输入、输出和历史不会保留。
 
-```bash
-npm run check:json-toolbox
-```
-
-Chrome 加载扩展时选择：
-
-```text
-tools/json-toolbox/dist
-```
+支持 Windows、macOS、Linux 的桌面版 Google Chrome 当前稳定版。Edge、Brave 等 Chromium 浏览器可尝试安装，但不属于正式支持范围。
 
 ## Structure
 
 ```text
 coco-tools/
 ├── tools/
-│   ├── tsp-cvt/          # TSP CVT Chrome extension
-│   └── json-toolbox/     # JSON Toolbox Chrome extension
+│   └── converter-toolbox/ # 转换工具箱 Chrome extension
 ├── package.json          # npm workspace root
 └── README.md
 ```

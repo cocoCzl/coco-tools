@@ -7,13 +7,9 @@
     "tools/*"
   ],
   "scripts": {
-    "dev:tsp-cvt": "npm run dev -w @coco-tools/tsp-cvt",
-    "build:tsp-cvt": "npm run build -w @coco-tools/tsp-cvt",
-    "preview:tsp-cvt": "npm run preview -w @coco-tools/tsp-cvt",
-    "dev:json-toolbox": "npm run dev -w @coco-tools/json-toolbox",
-    "build:json-toolbox": "npm run build -w @coco-tools/json-toolbox",
-    "test:json-toolbox": "npm run test -w @coco-tools/json-toolbox",
-    "check:json-toolbox": "npm run check -w @coco-tools/json-toolbox",
-    "benchmark:json-toolbox": "npm run benchmark -w @coco-tools/json-toolbox"
+    "dev:converter-toolbox": "npm run dev -w @coco-tools/converter-toolbox",
+    "build:converter-toolbox": "npm run build -w @coco-tools/converter-toolbox",
+    "test:converter-toolbox": "npm run test -w @coco-tools/converter-toolbox",
+    "check:converter-toolbox": "npm run check -w @coco-tools/converter-toolbox"
   }
 }

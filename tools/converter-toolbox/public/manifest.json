@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "转换工具箱",
+  "version": "1.0.0",
+  "description": "本地、离线、轻量的数据与时间转换工具。",
+  "permissions": ["storage"],
+  "background": { "service_worker": "service-worker.js", "type": "module" },
+  "action": {
+    "default_title": "打开转换工具箱",
+    "default_icon": { "16": "icons/icon16.png", "48": "icons/icon48.png", "128": "icons/icon128.png" }
+  },
+  "icons": { "16": "icons/icon16.png", "48": "icons/icon48.png", "128": "icons/icon128.png" }
+}

@@ -5,6 +5,7 @@ tools/*/node_modules/
 # Build output
 dist/
 tools/*/dist/
+tools/*/release/
 
 # TypeScript build info
 *.tsbuildinfo
@@ -39,5 +40,6 @@ Thumbs.db
 # Test screenshots (keep README screenshot)
 *.jpg
 *.png
+tools/*/test-results/
 !tools/tsp-cvt/timestamp-converter-ui.jpg
 !tools/tsp-cvt/public/icons/*.png
