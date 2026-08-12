@@ -1,6 +1,9 @@
 import { formatJson as formatLosslessJson, minifyJson as minifyLosslessJson } from './lossless-json.ts'
 import { generateJavaDataClass } from './java.ts'
 import { parseYamlSubset, stringifyYamlSubset } from './yaml-subset.ts'
+import { assertInputLimit, assertOutputLimit, LimitedWriter } from './limits.ts'
+import type { OperationId, OperationOptions } from './protocol.ts'
+import { yamlSubsetToJson } from './yaml-to-json.ts'
 
 export type Result = { output: string; warnings?: string[]; fileName?: string }
 
@@ -36,9 +39,15 @@ function displayJsonError(error: unknown): Error {
 }
 
 export function escapeJson(input: string, escapeNonAscii = false): Result {
-  let output = JSON.stringify(input)
-  if (escapeNonAscii) output = output.replace(/[\u0080-\uffff]/g, (char) => [...char].map((part) => `\\u${part.charCodeAt(0).toString(16).padStart(4, '0')}`).join(''))
-  return { output }
+  if (!escapeNonAscii) return { output: JSON.stringify(input) }
+  const writer = new LimitedWriter(); writer.write('"')
+  for (const char of input) {
+    const encoded = JSON.stringify(char).slice(1, -1)
+    if (char.codePointAt(0)! >= 0x80) for (let index = 0; index < char.length; index += 1) writer.write(`\\u${char.charCodeAt(index).toString(16).padStart(4, '0')}`)
+    else writer.write(encoded)
+  }
+  writer.write('"')
+  return { output: writer.finish() }
 }
 
 export function unescapeJson(input: string): Result {
@@ -58,7 +67,7 @@ export function queryToJson(input: string): Result {
   if (/^[a-z][a-z\d+.-]*:\/\//i.test(text)) { try { query = new URL(text).search.slice(1) } catch { throw new ConverterError('请输入合法的完整 URL。') } }
   else query = (text.startsWith('?') ? text.slice(1) : text).split('#', 1)[0]
   const output: Record<string, string | string[]> = {}
-  for (const pair of query ? query.split('&') : []) { const at = pair.indexOf('='); const key = decode(at < 0 ? pair : pair.slice(0, at)); const value = decode(at < 0 ? '' : pair.slice(at + 1)); const old = output[key]; output[key] = old === undefined ? value : Array.isArray(old) ? [...old, value] : [old, value] }
+  for (const pair of query ? query.split('&') : []) { const at = pair.indexOf('='); const key = decode(at < 0 ? pair : pair.slice(0, at)); const value = decode(at < 0 ? '' : pair.slice(at + 1)); const old = output[key]; if (old === undefined) output[key] = value; else if (Array.isArray(old)) old.push(value); else output[key] = [old, value] }
   return { output: JSON.stringify(output, null, 2) }
 }
 
@@ -77,7 +86,7 @@ export function jsonToQuery(input: string): Result {
 export function yamlToJson(input: string): Result {
   if (!input.trim()) throw new ConverterError('请输入 YAML。')
   try { JSON.parse(input); throw new ConverterError('检测到 JSON 输入，请使用“JSON → YAML”。') } catch (error) { if (error instanceof ConverterError) throw error }
-  try { return { output: JSON.stringify(parseYamlSubset(input), null, 2) } } catch (error) { throw displayJsonError(error) }
+  try { return { output: yamlSubsetToJson(input) } } catch (error) { throw displayJsonError(error) }
 }
 
 export function jsonToYaml(input: string): Result { return { output: stringifyYamlSubset(parseJson(input)) } }
@@ -89,18 +98,22 @@ export function generateJava(input: string, options: { rootClassName?: string; p
   return generateJavaDataClass(input, options)
 }
 
-export function runOperation(operation: string, input: string, options: Record<string, unknown> = {}): Result {
+export function runOperation(operation: OperationId, input: string, options: OperationOptions = {}): Result {
+  assertInputLimit(input)
+  let result: Result
   switch (operation) {
-    case 'format': return formatJson(input, options.indent === 4 || options.indent === '4' || options.indent === 'tab' ? (options.indent === '4' ? 4 : options.indent) : 2)
-    case 'minify': return minifyJson(input)
-    case 'escape': return escapeJson(input, options.escapeNonAscii === true)
-    case 'unescape': return unescapeJson(input)
-    case 'query': return queryToJson(input)
-    case 'url': return jsonToQuery(input)
-    case 'json-yaml': return jsonToYaml(input)
-    case 'yaml-json': return yamlToJson(input)
-    case 'yaml-format': return formatYaml(input)
-    case 'java': return generateJava(input, options)
+    case 'format': result = formatJson(input, options.indent === '4' || options.indent === 'tab' ? (options.indent === '4' ? 4 : options.indent) : 2); break
+    case 'minify': result = minifyJson(input); break
+    case 'escape': result = escapeJson(input, options.escapeNonAscii === true); break
+    case 'unescape': result = unescapeJson(input); break
+    case 'query': result = queryToJson(input); break
+    case 'url': result = jsonToQuery(input); break
+    case 'json-yaml': result = jsonToYaml(input); break
+    case 'yaml-json': result = yamlToJson(input); break
+    case 'yaml-format': result = formatYaml(input); break
+    case 'java': result = generateJava(input, options); break
     default: throw new ConverterError('未知转换操作。')
   }
+  assertOutputLimit(result.output)
+  return result
 }

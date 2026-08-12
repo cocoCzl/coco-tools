@@ -14,7 +14,7 @@ test('扩展图标只创建一个工作台标签页，并在已有标签页上�
     windows: { async update() { focused += 1 } },
   }
   await import(`../src/service-worker.ts?test=${Date.now()}`)
-  action?.(); await new Promise((resolve) => setImmediate(resolve))
+  action?.(); action?.(); action?.(); await new Promise((resolve) => setImmediate(resolve))
   action?.(); await new Promise((resolve) => setImmediate(resolve))
   assert.equal(created, 1); assert.equal(activated, 1); assert.equal(focused, 1)
   removed?.(42); await new Promise((resolve) => setImmediate(resolve)); assert.equal(stored, undefined)

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { escapeJson, formatJson, formatYaml, generateJava, jsonToQuery, jsonToYaml, minifyJson, queryToJson, runOperation, unescapeJson, yamlToJson } from '../src/core/operations.ts'
 import { currentTimeDescription, localDateTimeToTimestamps, timestampToLocal, utcOffset } from '../src/core/timestamp.ts'
+import { INPUT_LIMIT_BYTES, MAX_NESTING_DEPTH, OUTPUT_LIMIT_BYTES, utf8Bytes } from '../src/core/limits.ts'
 
 test('格式化与压缩保留 JSON 原始数字和转义标记', () => {
   const input = '{"id":900719925474099312345,"rate":1.00,"scientific":1e+3,"text":"\\u4e2d\\u6587"}'
@@ -93,4 +94,16 @@ test('时间戳以浏览器本地时区完成 10、13 位转换并拒绝非法�
   assert.throws(() => localDateTimeToTimestamps('2024-02-31', '12:00:00'), /有效的本地日期/)
   assert.match(utcOffset(new Date()), /^UTC[+-]\d{2}:\d{2}$/)
   assert.match(currentTimeDescription(new Date(milliseconds)), /星期/)
+})
+
+test('转换任务强制执行 UTF-8 输入、输出和嵌套深度边界', () => {
+  assert.equal(INPUT_LIMIT_BYTES, 20 * 1024 * 1024)
+  assert.equal(OUTPUT_LIMIT_BYTES, 40 * 1024 * 1024)
+  assert.equal(utf8Bytes('中'), 3)
+  assert.throws(() => runOperation('escape', '中'.repeat(Math.floor(INPUT_LIMIT_BYTES / 3) + 1)), /20 MiB/)
+  assert.throws(() => runOperation('escape', 'é'.repeat(7_000_000), { escapeNonAscii: true }), /40 MiB/)
+  const valid = '['.repeat(MAX_NESTING_DEPTH) + '0' + ']'.repeat(MAX_NESTING_DEPTH)
+  assert.equal(minifyJson(valid).output, valid)
+  const invalid = `[${valid}]`
+  assert.throws(() => minifyJson(invalid), /512 层/)
 })

@@ -9,6 +9,7 @@ declare const chrome: {
 }
 
 const key = 'workbenchTabId'
+let opening: Promise<void> | undefined
 async function openWorkbench() {
   const session = await chrome.storage.session.get([key])
   if (session.workbenchTabId !== undefined) {
@@ -22,5 +23,9 @@ async function openWorkbench() {
   const tab = await chrome.tabs.create({ url: chrome.runtime.getURL('index.html') })
   if (tab.id !== undefined) await chrome.storage.session.set({ [key]: tab.id })
 }
-chrome.action.onClicked.addListener(() => void openWorkbench())
+function requestOpen() {
+  if (!opening) opening = openWorkbench().finally(() => { opening = undefined })
+  return opening
+}
+chrome.action.onClicked.addListener(() => void requestOpen())
 chrome.tabs.onRemoved.addListener((id) => void chrome.storage.session.get([key]).then((value) => value.workbenchTabId === id ? chrome.storage.session.remove(key) : undefined))

@@ -4,7 +4,7 @@
 
 - `npm run check:converter-toolbox`：核心行为测试、类型检查、构建、Manifest 审计与 1 MB 目录体积检查。
 - `npm run test:browser -w @coco-tools/converter-toolbox`：Playwright 加载 MV3 扩展，验证六模块、偏好恢复、JSON 错误保留、快捷键、Java 偏好与下载文件名。
-- `npm run benchmark -w @coco-tools/converter-toolbox`：记录并强制校验 1 MB（≤200 ms）和 10 MB（≤2 秒）的 JSON 格式化与 JSON/YAML 往返基线。
+- `npm run benchmark -w @coco-tools/converter-toolbox`：除原有往返基线外，以独立进程强制校验 20 MB JSON 格式化、Java 推导和 YAML→JSON 均 ≤2 秒、增量堆 ≤200 MiB。
 
 ## v1.0.0 验证结果
 
@@ -20,7 +20,7 @@
 1. 解压 `converter-toolbox-v1.0.0.zip`，从 `chrome://extensions` 加载；点击图标两次，确认只聚焦同一工作台标签页。
 2. 在六个模块完成一次有效转换；验证导入、复制、下载、清空、浅色/深色/系统主题与窄窗口布局。
 3. DevTools Network 设为 Offline 后重复上述操作，确认没有外部请求；检查 Manifest 仅含 `storage`，无内容脚本、站点权限或剪贴板读取权限。
-4. 导入 1 MB、10 MB 与超过 20 MB 的 JSON/YAML，确认 Worker 可取消，切换模块和关闭工作台后没有旧结果写入。
+4. 导入 1 MB、10 MB 与超过 20 MiB 的 JSON/YAML，确认超限文件读取前即被拒绝、Worker 可取消，切换模块和关闭工作台后没有旧结果写入；转换结果超过 40 MiB 时应停止并保留输入。
 5. DevTools Performance Monitor 记录空白工作台相对未打开扩展的增量内存；目标不超过 30 MB。
 
 ## 发布要求
