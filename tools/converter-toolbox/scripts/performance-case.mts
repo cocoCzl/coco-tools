@@ -2,12 +2,18 @@ import { performance } from 'node:perf_hooks'
 import { formatJson, generateJava, jsonToYaml, yamlToJson } from '../src/core/operations.ts'
 
 const name = process.argv[2]
+const bytes = Number(process.argv[3] ?? 20_000_000)
+if (
+  !['format', 'java', 'json-yaml', 'yaml-json'].includes(name) ||
+  ![1_000_000, 10_000_000, 20_000_000].includes(bytes)
+)
+  throw new Error('请指定受支持的转换操作及 1000000、10000000 或 20000000 字节规模。')
 const jsonRow = '{"id":123456,"name":"converter-toolbox","items":[1,2,3],"enabled":true}'
 const yamlRow = '- id: 123456\n  name: converter-toolbox\n  items: [1, 2, 3]\n  enabled: true\n'
-const json = `[${Array(Math.floor(20_000_000 / (jsonRow.length + 1)))
+const json = `[${Array(Math.floor(bytes / (jsonRow.length + 1)))
   .fill(jsonRow)
   .join(',')}]`
-const yaml = yamlRow.repeat(Math.floor(20_000_000 / yamlRow.length))
+const yaml = yamlRow.repeat(Math.floor(bytes / yamlRow.length))
 global.gc?.()
 const before = process.memoryUsage().heapUsed
 const started = performance.now()

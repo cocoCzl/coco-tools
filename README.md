@@ -24,7 +24,7 @@ npm run dev:converter-toolbox
 | `npm run test:java:annotations -w @coco-tools/converter-toolbox` | 使用指定的真实 Lombok/Jackson JAR 编译及反射验证生成代码（配置见下文） |
 | `npm run build:converter-toolbox` | 准备资源、类型检查、构建和产物审计；**不生成 ZIP** |
 | `npm run package:converter-toolbox` | 构建、生成 ZIP、解压检查全部文件内容和版本 |
-| `npm run benchmark -w @coco-tools/converter-toolbox` | 独立性能检查，不依赖构建 |
+| `npm run benchmark -w @coco-tools/converter-toolbox` | 1 / 10 / 20 MB 单操作预算检查及旧组合诊断，不依赖构建；口径见扩展 README |
 | `npm run check:converter-toolbox` | 格式检查、Node 测试、构建、打包验证和性能检查 |
 | `npm run test:browser -w @coco-tools/converter-toolbox` | 构建并在实际加载 MV3 的 Chrome for Testing 中执行浏览器回归 |
 | `npm run format -w @coco-tools/converter-toolbox` | 用 Prettier 格式化源码、脚本和测试 |
