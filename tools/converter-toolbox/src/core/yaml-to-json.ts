@@ -7,6 +7,11 @@ type Line = { number: number; indent: number; text: string; start: number }
 /** One streaming parser shared by YAML conversion and formatting. No numeric coercion. */
 export function yamlSubsetToJson(source: string): string {
   const writer = new LimitedWriter()
+  // Object sequences commonly repeat a small schema. Cache only validated short keys,
+  // never values or errors; this bounds retention and preserves per-occurrence locations.
+  const keyTokens = new Map<string, { key: string; json: string }>()
+  const indents = ['']
+  const padding = (depth: number): string => (indents[depth] ??= '  '.repeat(depth))
   let cursor = 0
   let lineNumber = 0
   let current: Line | undefined
@@ -27,17 +32,17 @@ export function yamlSubsetToJson(source: string): string {
       lineNumber += 1
       if (raw.endsWith('\r')) raw = raw.slice(0, -1)
       if (lineNumber === 1 && raw.startsWith('\uFEFF')) raw = ` ${raw.slice(1)}`
-      const prefix = raw.match(/^\s*/)?.[0] ?? ''
-      if (prefix.includes('\t'))
+      const body = raw.trimStart()
+      const indent = raw.length - body.length
+      const tab = raw.indexOf('\t')
+      if (tab >= 0 && tab < indent)
         fail(
           { number: lineNumber, start, indent: 0, text: raw },
-          prefix.indexOf('\t') + 1,
+          tab + 1,
           'YAML 缩进不能使用 Tab。',
         )
-      const clean = uncomment(raw).trimEnd()
-      if (!clean.trim()) continue
-      const indent = clean.length - clean.trimStart().length
-      const text = clean.slice(indent)
+      const text = uncomment(body).trimEnd()
+      if (!text) continue
       const line = { number: lineNumber, indent, text, start }
       if (/^(---|\.\.\.)(?:\s|$)/.test(text)) fail(line, indent + 1, 'YAML 多文档暂不支持。')
       return line
@@ -84,25 +89,31 @@ export function yamlSubsetToJson(source: string): string {
     if (!raw || raw.startsWith('[') || raw.startsWith('{') || raw.startsWith('?'))
       fail(line, line.indent + 1, '复杂 YAML 键暂不支持。')
     if (raw === '<<') fail(line, line.indent + 1, 'YAML 合并键暂不支持。')
-    const json = scalar(raw, line, line.indent + 1)
-    // Only string tokens may be keys. JSON.parse here never sees a numeric token.
-    if (!json.startsWith('"'))
-      fail(line, line.indent + 1, 'YAML 映射键必须是字符串；请为数字或布尔值形式的键加引号。')
-    const key = JSON.parse(json) as string
+    let token = keyTokens.get(raw)
+    if (!token) {
+      const json = scalar(raw, line, line.indent + 1)
+      // Only string tokens may be keys. JSON.parse here never sees a numeric token.
+      if (!json.startsWith('"'))
+        fail(line, line.indent + 1, 'YAML 映射键必须是字符串；请为数字或布尔值形式的键加引号。')
+      const key = JSON.parse(json) as string
+      token = { key, json: JSON.stringify(key) }
+      if (keyTokens.size < 128 && raw.length <= 128) keyTokens.set(raw, token)
+    }
     const tail = line.text.slice(at + 1)
+    const value = tail.trimStart()
     return {
-      key,
-      value: tail.trimStart(),
-      column: line.indent + at + 2 + tail.length - tail.trimStart().length,
+      key: token.key,
+      json: token.json,
+      value,
+      column: line.indent + at + 2 + tail.length - value.length,
     }
   }
   const separator = (depth: number, first: boolean) => {
-    if (!first) writer.write(',')
-    writer.write(`\n${'  '.repeat(depth + 1)}`)
+    return `${first ? '' : ','}\n${padding(depth + 1)}`
   }
   const writeScalar = (raw: string, line: Line, column: number, depth: number) => {
     const json = scalar(raw, line, column, depth)
-    writer.write(json.includes('\n') ? json.replace(/\n/g, `\n${'  '.repeat(depth)}`) : json)
+    writer.write(json.includes('\n') ? json.replace(/\n/g, `\n${padding(depth)}`) : json)
   }
   const block = (indent: number, depth: number): void => {
     if (depth > MAX_NESTING_DEPTH)
@@ -131,17 +142,14 @@ export function yamlSubsetToJson(source: string): string {
       keys.add(parsed.key)
       if (!line) advance()
       line = undefined
-      separator(depth, first)
+      writer.write(`${separator(depth, first)}${parsed.json}: `)
       first = false
-      writer.write(JSON.stringify(parsed.key))
-      writer.write(': ')
       if (parsed.value) writeScalar(parsed.value, item, parsed.column, depth + 1)
       else if (current && current.indent > indent) block(current.indent, depth + 1)
       else writer.write('null')
       if (current && current.indent > indent) fail(current, current.indent + 1, '缩进层级不正确。')
     }
-    if (!first) writer.write(`\n${'  '.repeat(depth)}`)
-    writer.write('}')
+    writer.write(`${first ? '' : `\n${padding(depth)}`}}`)
   }
   const sequence = (indent: number, depth: number): void => {
     writer.write('[')
@@ -151,7 +159,7 @@ export function yamlSubsetToJson(source: string): string {
       const value = item.text.slice(1).trimStart()
       const column = item.indent + item.text.length - value.length + 1
       advance()
-      separator(depth, first)
+      writer.write(separator(depth, first))
       first = false
       if (!value) {
         if (current && current.indent > indent) block(current.indent, depth + 1)
@@ -162,8 +170,7 @@ export function yamlSubsetToJson(source: string): string {
       if (current && current.indent > indent)
         fail(current, current.indent + 1, '序列项缩进不正确。')
     }
-    if (!first) writer.write(`\n${'  '.repeat(depth)}`)
-    writer.write(']')
+    writer.write(`${first ? '' : `\n${padding(depth)}`}]`)
   }
   // YAML is a superset of JSON: accept multiline strict JSON roots too.
   const trimmed = source.trimStart()

@@ -85,6 +85,55 @@ test('YAML 两条路径都保留流式大整数、小数、指数与数字字符
   )
 })
 
+test('YAML 重复模式及大量不同键仍按各自原始值转换，含长键和转义键', () => {
+  const longKey = '长键'.repeat(80)
+  const yaml = Array.from(
+    { length: 160 },
+    (_, i) =>
+      `- key${i}: ${i}\n  "\\u0069d": 9007199254740993\n  name: 'row ${i}'\n  "${longKey}": [${i}, "${i}"]\n  __proto__: value${i}`,
+  ).join('\n')
+  const expected = `[${Array.from(
+    { length: 160 },
+    (_, i) =>
+      `{"key${i}":${i},"id":9007199254740993,"name":"row ${i}","${longKey}":[${i},"${i}"],"__proto__":"value${i}"}`,
+  ).join(',')}]`
+  assert.equal(yamlToJson(yaml).output, runOperation('format', expected).output)
+  assert.deepEqual(meaning(yamlToJson(formatYaml(yaml).output).output), meaning(expected))
+})
+
+test('YAML 重复出现的键不跳过重复键检查，错误位置指向当前行', () => {
+  const source = '- "a": 1\n- "\\u0061": 2\n  a: 3'
+  for (const operation of ['yaml-json', 'yaml-format'] as const)
+    assert.throws(
+      () => runOperation(operation, source),
+      (error: unknown) =>
+        error instanceof ToolError &&
+        error.message.includes('重复键“a”') &&
+        error.location?.index === source.lastIndexOf('a: 3') &&
+        error.location.line === 3 &&
+        error.location.column === 3,
+    )
+})
+
+test('YAML 行扫描保留 BOM、CRLF、注释、值内 Tab 及缩进 Tab 的位置规则', () => {
+  assert.equal(
+    yamlToJson('\uFEFF# heading\r\n  a: "x # text" # comment\r\n  b: x\ttext\r\n').output,
+    '{\n  "a": "x # text",\n  "b": "x\\ttext"\n}',
+  )
+  for (const tail of ['\t', '\t# comment', '  \t# comment']) {
+    const source = `a: 1\n${tail}`
+    assert.throws(
+      () => yamlToJson(source),
+      (error: unknown) =>
+        error instanceof ToolError &&
+        error.message.includes('Tab') &&
+        error.location?.line === 2 &&
+        error.location.index === source.indexOf('\t') &&
+        error.location.column === tail.indexOf('\t') + 1,
+    )
+  }
+})
+
 test('特殊字段作为普通自有键处理，不改变原型', () => {
   const before = Object.getOwnPropertyDescriptors(Object.prototype)
   const output = queryToJson(

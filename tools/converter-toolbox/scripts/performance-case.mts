@@ -23,4 +23,12 @@ const output =
           : ''
 const elapsed = performance.now() - started
 const heap = Math.max(0, process.memoryUsage().heapUsed - before)
-console.log(JSON.stringify({ name, elapsed, heap, outputBytes: Buffer.byteLength(output) }))
+console.log(
+  JSON.stringify({
+    name,
+    elapsed,
+    heap,
+    inputBytes: Buffer.byteLength(name === 'yaml-json' ? yaml : json),
+    outputBytes: Buffer.byteLength(output),
+  }),
+)
