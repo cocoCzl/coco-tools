@@ -1,0 +1,52 @@
+name: Converter toolbox checks
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - run: npm ci
+      - run: npm run format:check -w @coco-tools/converter-toolbox
+      - run: npm run typecheck -w @coco-tools/converter-toolbox
+      - run: npm run test:converter-toolbox
+      - name: Compile generated Java with real Lombok and Jackson annotations
+        env:
+          LOMBOK_JAR: ${{ runner.temp }}/lombok-1.18.38.jar
+          JACKSON_ANNOTATIONS_JAR: ${{ runner.temp }}/jackson-annotations-2.19.2.jar
+        run: |
+          curl --fail --location --retry 3 --output "$LOMBOK_JAR" https://repo.maven.apache.org/maven2/org/projectlombok/lombok/1.18.38/lombok-1.18.38.jar
+          curl --fail --location --retry 3 --output "$JACKSON_ANNOTATIONS_JAR" https://repo.maven.apache.org/maven2/com/fasterxml/jackson/core/jackson-annotations/2.19.2/jackson-annotations-2.19.2.jar
+          npm run test:java:annotations -w @coco-tools/converter-toolbox
+      - run: npm run package:converter-toolbox
+      - run: npx --no-install playwright install --with-deps chromium
+      # A headed bundled Chromium under Xvfb actually loads MV3 and its service worker.
+      - run: xvfb-run -a npm run test:browser -w @coco-tools/converter-toolbox
+      - uses: actions/upload-artifact@v4
+        with:
+          name: converter-toolbox-package
+          path: tools/converter-toolbox/release/*.zip
+  performance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+          cache: npm
+      - run: npm ci
+      - run: npm run benchmark -w @coco-tools/converter-toolbox

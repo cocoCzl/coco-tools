@@ -1,15 +1,28 @@
-import { execFile } from 'node:child_process'
-import { mkdir, rm, stat } from 'node:fs/promises'
-import { promisify } from 'node:util'
+import { mkdir, readdir, readFile, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
+import { zipSync } from 'fflate'
+import { root, archiveName } from './release-meta.mjs'
+import './check-release.mjs'
 
-const run = promisify(execFile)
-const root = resolve(import.meta.dirname, '..')
-const release = resolve(root, 'release')
-const name = 'converter-toolbox-v1.0.0.zip'
-await mkdir(release, { recursive: true })
-await rm(resolve(release, name), { force: true })
-await run('zip', ['-rq', resolve(release, name), '.'], { cwd: resolve(root, 'dist') })
-const size = (await stat(resolve(release, name))).size
-if (size > 1024 * 1024) throw new Error(`Release 压缩包为 ${size} B，超过 1 MB 限制。`)
-console.log(`Release 安装包已生成：release/${name}（${size} B）`)
+const entries = {}
+async function collect(directory, prefix = '') {
+  for (const entry of (await readdir(directory, { withFileTypes: true })).sort((a, b) =>
+    a.name.localeCompare(b.name),
+  )) {
+    const name = prefix + entry.name
+    if (entry.isSymbolicLink()) throw new Error(`安装包禁止符号链接：${name}`)
+    if (entry.isDirectory()) await collect(resolve(directory, entry.name), `${name}/`)
+    else
+      entries[name] = [
+        new Uint8Array(await readFile(resolve(directory, entry.name))),
+        { mtime: new Date(1980, 0, 1) },
+      ]
+  }
+}
+await collect(resolve(root, 'dist'))
+const bytes = zipSync(entries, { level: 9 })
+if (bytes.length > 1024 * 1024)
+  throw new Error(`Release 压缩包为 ${bytes.length} B，超过 1 MiB 限制。`)
+await mkdir(resolve(root, 'release'), { recursive: true })
+await writeFile(resolve(root, 'release', archiveName), bytes)
+console.log(`Release 安装包已生成：release/${archiveName}（${bytes.length} B）`)

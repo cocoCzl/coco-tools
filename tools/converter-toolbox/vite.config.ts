@@ -19,7 +19,8 @@ export default defineConfig({
         'service-worker': resolve(directory, 'src/service-worker.ts'),
       },
       output: {
-        entryFileNames: (chunk) => chunk.name === 'service-worker' ? 'service-worker.js' : 'assets/[name]-[hash].js',
+        entryFileNames: (chunk) =>
+          chunk.name === 'service-worker' ? 'service-worker.js' : 'assets/[name]-[hash].js',
         chunkFileNames: 'assets/[name]-[hash].js',
         assetFileNames: 'assets/[name]-[hash][extname]',
       },

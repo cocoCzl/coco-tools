@@ -4,17 +4,32 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --host 127.0.0.1",
-    "build": "node scripts/generate-icons.mjs && tsc -p tsconfig.json && vite build && node scripts/check-release.mjs && node scripts/package-release.mjs",
+    "dev": "npm run prepare:assets && vite --host 127.0.0.1",
+    "prepare:assets": "node scripts/generate-icons.mjs",
+    "version": "node scripts/sync-version.mjs",
+    "typecheck": "tsc -p tsconfig.json",
+    "pretest": "npm run prepare:assets",
     "test": "node --experimental-strip-types --test tests/*.test.*",
+    "build": "npm run prepare:assets && npm run typecheck && vite build && npm run check:release",
+    "check:release": "node scripts/check-release.mjs",
+    "package": "npm run build && node scripts/package-release.mjs && npm run check:package",
+    "check:package": "node scripts/check-package.mjs",
     "test:browser": "npm run build && playwright test",
-    "check": "npm run test && npm run build && npm run benchmark",
-    "benchmark": "node --experimental-strip-types scripts/benchmark.mts"
+    "check": "npm run format:check && npm run test && npm run package && npm run benchmark",
+    "benchmark": "node --experimental-strip-types scripts/benchmark.mts",
+    "format": "prettier --write src scripts tests *.ts *.json",
+    "format:check": "prettier --check src scripts tests *.ts *.json",
+    "test:java:annotations": "node --experimental-strip-types --test tests/java-annotations.integration.mts"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
     "@types/node": "^24.10.1",
+    "fflate": "^0.8.3",
+    "prettier": "^3.9.10",
     "typescript": "~5.9.3",
-    "vite": "^7.3.1"
+    "vite": "^7.3.7"
+  },
+  "engines": {
+    "node": ">=24.11.1 <25"
   }
 }

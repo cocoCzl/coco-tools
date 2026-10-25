@@ -4,5 +4,5 @@ export default defineConfig({
   testDir: './tests',
   testMatch: /.*\.spec\.mts/,
   timeout: 30_000,
-  use: { headless: true },
+  workers: 1,
 })

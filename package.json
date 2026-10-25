@@ -10,6 +10,10 @@
     "dev:converter-toolbox": "npm run dev -w @coco-tools/converter-toolbox",
     "build:converter-toolbox": "npm run build -w @coco-tools/converter-toolbox",
     "test:converter-toolbox": "npm run test -w @coco-tools/converter-toolbox",
-    "check:converter-toolbox": "npm run check -w @coco-tools/converter-toolbox"
+    "check:converter-toolbox": "npm run check -w @coco-tools/converter-toolbox",
+    "package:converter-toolbox": "npm run package -w @coco-tools/converter-toolbox"
+  },
+  "engines": {
+    "node": ">=24.11.1 <25"
   }
 }
