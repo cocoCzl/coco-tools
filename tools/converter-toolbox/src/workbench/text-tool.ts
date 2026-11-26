@@ -50,7 +50,6 @@ export function textView(module: TextModuleId, state: TextSession, indentMenu: s
 
 export function bindTextTool(
   app: HTMLElement,
-  module: TextModuleId,
   state: TextSession,
   preferences: Preferences,
   persist: () => void,

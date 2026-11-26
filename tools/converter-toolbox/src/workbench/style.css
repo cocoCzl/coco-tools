@@ -167,9 +167,6 @@ nav {
   font-size: 11px;
   color: var(--muted);
 }
-.nav-item i {
-  display: none;
-}
 .sidebar-foot {
   display: flex;
   align-items: center;

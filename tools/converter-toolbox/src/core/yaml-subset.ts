@@ -2,10 +2,6 @@ import { RawNumber, parseCompactJson, visitArrayItems, type CompactJson } from '
 import { LimitedWriter, MAX_NESTING_DEPTH } from './limits.ts'
 
 /** Semantic output: strings are decoded; number tokens never pass through Number. */
-export function stringifyYamlSubset(value: CompactJson): string {
-  return renderYaml(value)
-}
-
 function renderYaml(value?: CompactJson, rootArraySource?: string): string {
   const writer = new LimitedWriter()
   const scalar = (item: CompactJson): string | undefined => {
@@ -62,5 +58,5 @@ function plainString(value: string): boolean {
 export function jsonToYamlSubset(source: string): string {
   return source.trimStart().startsWith('[')
     ? renderYaml(undefined, source)
-    : stringifyYamlSubset(parseCompactJson(source))
+    : renderYaml(parseCompactJson(source))
 }

@@ -112,7 +112,7 @@ export function generateJavaDataClass(input: string, options: JavaOptions = {}):
   const jackson = options.jackson ?? true
   const lombok = options.lombok ?? false
   return {
-    output: render(root, options.packageName?.trim() || '', jackson, lombok, context.warnings),
+    output: render(root, packageName, jackson, lombok, context.warnings),
     warnings: [...new Set(context.warnings)],
     fileName: `${rootName}.java`,
   }
@@ -141,7 +141,7 @@ function arrayItemHint(field: InferenceHint): InferenceHint {
 }
 function inferValue(value: CompactJson, field: InferenceHint, context: Context): Type {
   if (value === null) return primitive('Null')
-  if (value instanceof RawNumber) return primitive(numberType([value]))
+  if (value instanceof RawNumber) return primitive(numberType(value))
   if (typeof value === 'string') return primitive('String')
   if (typeof value === 'boolean') return primitive('Boolean')
   if (Array.isArray(value)) {
@@ -164,7 +164,7 @@ function mergeType(type: Type, value: CompactJson, field: InferenceHint, context
     value instanceof RawNumber &&
     ['Integer', 'Long', 'BigInteger', 'BigDecimal'].includes(type.name)
   )
-    return primitive(widerNumber(type.name, numberType([value])))
+    return primitive(widerNumber(type.name, numberType(value)))
   if (
     (typeof value === 'string' && type.name === 'String') ||
     (typeof value === 'boolean' && type.name === 'Boolean')
@@ -194,12 +194,8 @@ function warnUnknown(type: Type, field: string, context: Context): void {
   if (type.model)
     for (const child of type.model.fields) warnUnknown(child.type, child.original, context)
 }
-function numberType(nodes: RawNumber[]): string {
-  const kinds = nodes.map((node) => (/[.eE]/.test(node.raw) ? 'BigDecimal' : integerType(node.raw)))
-  if (kinds.includes('BigDecimal')) return 'BigDecimal'
-  if (kinds.includes('BigInteger')) return 'BigInteger'
-  if (kinds.includes('Long')) return 'Long'
-  return 'Integer'
+function numberType(node: RawNumber): string {
+  return /[.eE]/.test(node.raw) ? 'BigDecimal' : integerType(node.raw)
 }
 function integerType(raw: string): string {
   const value = BigInt(raw)

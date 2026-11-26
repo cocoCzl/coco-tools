@@ -1,63 +1,47 @@
-# coco-tools
+# Coco Tools
 
-个人本地工具集合仓库。每个 `tools/*` 是独立 npm workspace，保留独立版本、构建目录和安装包。目前仅有 [转换工具箱](tools/converter-toolbox/README.md)，不建立空的共享包。
+个人本地工具集合，专注于离线、轻量的数据处理。目前包含一款 Chrome 扩展：**转换工具箱**，在独立标签页中完成常用的数据与时间转换。
 
-转换工具箱是本地、离线、轻量的 Chrome 扩展，包含 JSON 格式化、JSON 转义、URL 参数、Java 数据类、JSON / YAML 和时间戳六个模块。转换全部在本机执行，不上传数据，不使用远程脚本、字体或统计服务。
+## 功能
 
-## 开发与验证
+| 模块 | 支持的操作 |
+| --- | --- |
+| JSON 格式化 | 校验、格式化、压缩，支持 2 空格、4 空格和 Tab 缩进 |
+| JSON 转义 | 字符串转义与反转义，可选非 ASCII 字符转义 |
+| URL 参数 | 查询参数与 JSON 互转，支持完整 URL 和重复参数 |
+| Java 数据类 | 从 JSON 生成 Java POJO，支持嵌套对象、对象数组、Jackson 和 Lombok |
+| JSON / YAML | 双向转换、YAML 格式化与校验，支持 JSON 兼容的 YAML 子集 |
+| 时间戳 | Unix 时间戳与日期互转，支持秒、毫秒、本地时区和 UTC |
 
-使用 Node **24.11.1**（见 `.node-version`；支持 24.11.1 至 24.x）、npm 11。Java 编译测试使用 JDK 21；本地没有 JDK 时会明确跳过，CI 缺少 JDK 则失败。
+- **本地处理**：转换无需联网，不上传数据，无远程脚本、字体或统计服务；扩展仅申请 `storage` 权限。
+- **保留数字精度**：JSON 格式化、压缩保留数字原文，JSON / YAML 转换避免大整数和高精度小数的精度丢失。
+- **独立工作台**：支持文件导入、结果复制与下载、错误定位、键盘快捷键，以及浅色、深色和跟随系统主题。
+
+输入和结果仅保留在当前页面内存中，切换模块可继续使用，刷新或关闭页面即清除；仅保存外观、缩进和 Java 配置等偏好。转换规则与限制见[使用说明](tools/converter-toolbox/README.md)。
+
+## 安装
+
+准备 Node.js **24.11.1 至 24.x**（推荐使用 `.node-version` 指定版本）和 npm 11，在项目根目录执行：
 
 ```bash
 npm ci
-npm run dev:converter-toolbox
+npm run build:converter-toolbox
 ```
 
-从仓库根目录执行：
+1. 在 Chrome 中打开 `chrome://extensions`，开启「开发者模式」。
+2. 点击「加载已解压的扩展程序」，选择 `tools/converter-toolbox/dist`。
+3. 点击扩展图标，打开转换工具箱；再次点击会聚焦已打开的工作台。
 
-| 命令 | 职责 |
-| --- | --- |
-| `npm run dev:converter-toolbox` | 准备图标并启动 Vite 开发服务；扩展完整验收使用构建目录 |
-| `npm run prepare:assets -w @coco-tools/converter-toolbox` | 生成本地图标，无网络依赖 |
-| `npm run typecheck -w @coco-tools/converter-toolbox` | TypeScript 类型检查 |
-| `npm run test:converter-toolbox` | 自动准备图标，执行核心、发布约束、Service Worker、Java 编译和时间戳 Node 测试 |
-| `npm run test:java:annotations -w @coco-tools/converter-toolbox` | 使用指定的真实 Lombok/Jackson JAR 编译及反射验证生成代码（配置见下文） |
-| `npm run build:converter-toolbox` | 准备资源、类型检查、构建和产物审计；**不生成 ZIP** |
-| `npm run package:converter-toolbox` | 构建、生成 ZIP、解压检查全部文件内容和版本 |
-| `npm run benchmark -w @coco-tools/converter-toolbox` | 1 / 10 / 20 MB 单操作预算检查及旧组合诊断，不依赖构建；口径见扩展 README |
-| `npm run check:converter-toolbox` | 格式检查、Node 测试、构建、打包验证和性能检查 |
-| `npm run test:browser -w @coco-tools/converter-toolbox` | 构建并在实际加载 MV3 的 Chrome for Testing 中执行浏览器回归 |
-| `npm run format -w @coco-tools/converter-toolbox` | 用 Prettier 格式化源码、脚本和测试 |
+需要 ZIP 安装包时，运行 `npm run package:converter-toolbox`，产物位于 `tools/converter-toolbox/release/`。解压后按上述步骤加载解压目录。
 
-首次浏览器测试先安装匹配锁定 Playwright 版本的 Chromium：
+## 本地开发
+
+技术栈：TypeScript + Vite + 原生 DOM，文本转换在 Web Worker 中执行。各工具通过 npm workspaces 管理，独立维护版本和构建产物。
 
 ```bash
-npx --no-install playwright install --with-deps chromium
-npm run test:browser -w @coco-tools/converter-toolbox
+npm run dev:converter-toolbox    # 启动工作台开发服务
+npm run test:converter-toolbox   # 运行 Node 测试
+npm run check:converter-toolbox  # 格式、测试、打包与性能检查
 ```
 
-浏览器测试使用有界面的 Chromium 和临时 profile，不使用不能加载扩展的 headless shell。Linux 无图形桌面时使用 `xvfb-run -a npm run test:browser -w @coco-tools/converter-toolbox`；可用 `CHROME_EXECUTABLE` 指定兼容 Chromium 二进制。GitHub Actions 从干净检出开始 `npm ci`，安装 JDK/Chromium，执行上述检查，上传安装包；不会创建 Release、推送或发布商店版本。
-
-真实注解处理器测试要求 JDK 21，并将 `LOMBOK_JAR`、`JACKSON_ANNOTATIONS_JAR` 环境变量分别指向 **Lombok 1.18.38**、**Jackson annotations 2.19.2** 的 JAR。测试校验固定 SHA-256，再显式启用 Lombok 注解处理器，验证 Lombok 单独开启及与 Jackson 同时开启的字段类型、访问器和字段映射。已有 JAR 时可离线执行；普通 Node 测试不下载 JAR。CI 在独立步骤从 Maven Central 下载固定版本，下载失败或校验不符会失败；JAR 不进入扩展包。
-
-## 安装、版本与目录
-
-在 `chrome://extensions` 开启开发者模式，选择“加载已解压的扩展程序”，指向 `tools/converter-toolbox/dist`。也可运行打包命令后解压 `tools/converter-toolbox/release/converter-toolbox-v<version>.zip`，直接加载解压根目录。
-
-版本源是扩展自己的 `tools/converter-toolbox/package.json`。升级版本时运行：
-
-```bash
-npm version patch -w @coco-tools/converter-toolbox --no-git-tag-version
-```
-
-npm 的 `version` 生命周期同步源码 Manifest；构建与打包会检查 package.json、源码 Manifest、构建 Manifest、ZIP 内 Manifest 一致。根 package.json 的版本不控制扩展版本。ZIP 由开发依赖 `fflate` 在 Node 中生成，不依赖系统 `zip`；普通构建与发布打包已拆开。原 `check:converter-toolbox` 仍包含打包。
-
-支持桌面版 Chrome；其他 Chromium 浏览器可尝试使用。
-
-```text
-coco-tools/
-├── tools/converter-toolbox/   # 独立扩展、版本和发布脚本
-├── .github/workflows/        # 测试和构建，不自动发布
-├── CONTEXT.md                # 产品术语及数据边界
-└── package.json              # npm workspaces 入口
-```
+开发服务用于调试工作台页面，完整扩展行为需构建后在 Chrome 中验证。更多命令、浏览器测试和打包说明见[开发指南](docs/development.md)。

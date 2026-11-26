@@ -61,11 +61,10 @@ function render() {
   const current = modules.find((item) => item.id === active)!
   const navigation = modules
     .map(
-      (item, index) => `
+      (item) => `
     <button class="nav-item ${item.id === active ? 'is-active' : ''}" data-module="${item.id}"
       title="${item.label}" aria-label="${item.label}" ${item.id === active ? 'aria-current="page"' : ''}>
       <b aria-hidden="true">${item.icon}</b><span><strong>${item.label}</strong><small>${item.hint}</small></span>
-      <i aria-hidden="true">${String(index + 1).padStart(2, '0')}</i>
     </button>`,
     )
     .join('')
@@ -100,7 +99,7 @@ function render() {
     </section>`
   bindShell()
   if (active === 'timestamp') timestampController = bindTimestampTool(app, timestampSession)
-  else textController = bindTextTool(app, active, sessions[active], preferences, persist)
+  else textController = bindTextTool(app, sessions[active], preferences, persist)
 }
 function bindShell() {
   app.querySelectorAll<HTMLButtonElement>('[data-module]').forEach((button) =>
